@@ -1,9 +1,12 @@
 import tarfile
 
-# TODO: thread safety
-
 
 class TarfileLoader(object):
+    """Loads from a tarfile.
+
+    Cannot currently be used in conjunction with multiprocessing.
+    To do it, we'd have to re-open the file in each process.
+    """
     def __init__(self, path):
         self.file = tarfile.open(path)
         self._names_to_members = None

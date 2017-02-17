@@ -9,9 +9,7 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
-    benchmark_parser = subparsers.add_parser('benchmark')
-    benchmark_parser.add_argument('path')
-    benchmark_parser.set_defaults(func=benchmark.main)
+    benchmark.set_parser(subparsers.add_parser('benchmark'))
 
     args = parser.parse_args()
     args.func(args)

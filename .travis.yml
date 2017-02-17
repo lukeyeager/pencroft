@@ -18,4 +18,7 @@ install:
 script:
     - flake8
     - python -m archive_vfs benchmark .
+    - python -m archive_vfs benchmark . -t 4 -l threading
+    - python -m archive_vfs benchmark . -t 4 -l multiprocessing
     - python -m archive_vfs benchmark git.tar
+    - python -m archive_vfs benchmark git.tar -t 4 -l threading
