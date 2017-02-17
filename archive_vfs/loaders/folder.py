@@ -1,7 +1,7 @@
 import os
 
 
-class FilesysLoader(object):
+class FolderLoader(object):
     def __init__(self, path):
         path = os.path.realpath(path)
         self.root = path
