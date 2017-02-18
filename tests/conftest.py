@@ -2,6 +2,7 @@ import os
 import shutil
 import tarfile
 import tempfile
+import zipfile
 
 import pytest
 
@@ -32,5 +33,21 @@ def mytest_tarfile(mytest_folder):
     tf = tarfile.open(filename, 'w')
     tf.add(mytest_folder, arcname='')
     tf.close()
+    yield filename
+    os.remove(filename)
+
+
+@pytest.fixture(scope='session')
+def mytest_zipfile(mytest_folder):
+    filehandle, filename = tempfile.mkstemp(suffix='.zip')
+    os.close(filehandle)
+    os.remove(filename)
+    zf = zipfile.ZipFile(filename, 'w')
+    for dirpath, dirnames, filenames in os.walk(mytest_folder):
+        for path in filenames:
+            path = os.path.join(dirpath, path)
+            arcname = os.path.relpath(path, mytest_folder)
+            zf.write(path, arcname=arcname)
+    zf.close()
     yield filename
     os.remove(filename)

@@ -52,3 +52,27 @@ def test_tarfile_4proc(mytest_tarfile):
     args.threads = 4
     args.thread_library = 'multiprocessing'
     main(args)
+
+
+def test_zipfile_1(mytest_zipfile):
+    args = Args()
+    args.path = mytest_zipfile
+    args.threads = 1
+    main(args)
+
+
+def test_zipfile_4thread(mytest_zipfile):
+    args = Args()
+    args.path = mytest_zipfile
+    args.threads = 4
+    args.thread_library = 'threading'
+    main(args)
+
+
+@pytest.mark.xfail
+def test_zipfile_4proc(mytest_zipfile):
+    args = Args()
+    args.path = mytest_zipfile
+    args.threads = 4
+    args.thread_library = 'multiprocessing'
+    main(args)

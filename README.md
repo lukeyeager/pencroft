@@ -4,7 +4,9 @@
 [![PyPI version](https://badge.fury.io/py/pencroft.svg)](https://badge.fury.io/py/pencroft)
 
 ```sh
+python -m pencroft benchmark data/
 python -m pencroft benchmark data.tar
+python -m pencroft benchmark data.zip
 ```
 
-Loading of tarfiles doesn't work with multiprocessing.
+Loading of tarfiles and zipfiles doesn't work with multiprocessing.
