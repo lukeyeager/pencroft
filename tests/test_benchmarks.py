@@ -1,6 +1,6 @@
 import pytest
 
-from archive_vfs.benchmark import main
+from pencroft.benchmark import main
 
 
 class Args(object):

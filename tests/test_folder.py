@@ -1,4 +1,4 @@
-from archive_vfs import FolderLoader
+from pencroft import FolderLoader
 
 
 def test_keys(mytest_folder, mytest_keys):

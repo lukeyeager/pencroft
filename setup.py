@@ -12,7 +12,7 @@ with open(os.path.join(LOCAL_DIR, 'requirements-test.txt'), 'r') as infile:
             test_requirements.append(line)
 
 setuptools.setup(
-    name='archive-vfs',
+    name='pencroft',
     version='0.1',
     license='BSD',
     packages=setuptools.find_packages(),

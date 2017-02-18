@@ -1,4 +1,4 @@
-from archive_vfs import TarfileLoader
+from pencroft import TarfileLoader
 
 
 def test_keys(mytest_tarfile, mytest_keys):
