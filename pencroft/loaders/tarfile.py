@@ -1,17 +1,30 @@
 from __future__ import absolute_import
 
+import os
 import tarfile
 
 
 class TarfileLoader(object):
-    """Loads from a tarfile.
+    """Loads from a tarfile"""
 
-    Cannot currently be used in conjunction with multiprocessing.
-    To do it, we'd have to re-open the file in each process.
-    """
     def __init__(self, path):
-        self.file = tarfile.open(path)
+        self.path = os.path.realpath(path)
         self._names_to_members = None
+
+    def __getstate__(self):
+        """Used for pickling (which is used by multiprocessing)"""
+        d = self.__dict__.copy()
+        d.pop('_file', None)  # not pickle-able
+        return d
+
+    @property
+    def file(self):
+        """Lazy loading property - helps with multi-processing"""
+        try:
+            return self._file
+        except AttributeError:
+            self._file = tarfile.open(self.path)
+            return self._file
 
     def _set_names_to_members(self):
         assert self._names_to_members is None
@@ -30,4 +43,9 @@ class TarfileLoader(object):
 
     def get(self, key):
         member = self._names_to_members[key]
-        return self.file.extractfile(member).read()
+        try:
+            return self.file.extractfile(member).read()
+        except ValueError:
+            # Try re-opening the file
+            self.file = tarfile.open(self.path)
+            return self.file.extractfile(member).read()

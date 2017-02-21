@@ -8,5 +8,3 @@ python -m pencroft benchmark data/
 python -m pencroft benchmark data.tar
 python -m pencroft benchmark data.zip
 ```
-
-Loading of tarfiles and zipfiles doesn't work with multiprocessing.

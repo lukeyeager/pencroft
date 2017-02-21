@@ -3,8 +3,7 @@ import os
 
 class FolderLoader(object):
     def __init__(self, path):
-        path = os.path.realpath(path)
-        self.root = path
+        self.root = os.path.realpath(path)
 
     def _in_root(self, path):
         if os.path.isabs(path):

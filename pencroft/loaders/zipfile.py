@@ -1,17 +1,30 @@
 from __future__ import absolute_import
 
+import os
 import zipfile
 
 
 class ZipfileLoader(object):
-    """Loads from a zipfile.
+    """Loads from a zipfile"""
 
-    Cannot currently be used in conjunction with multiprocessing.
-    To do it, we'd have to re-open the file in each process.
-    """
     def __init__(self, path):
-        self.file = zipfile.ZipFile(path)
+        self.path = os.path.realpath(path)
         self._names_to_info = None
+
+    def __getstate__(self):
+        """Used for pickling (which is used by multiprocessing)"""
+        d = self.__dict__.copy()
+        d.pop('_file', None)  # not pickle-able
+        return d
+
+    @property
+    def file(self):
+        """Lazy loading property - helps with multi-processing"""
+        try:
+            return self._file
+        except AttributeError:
+            self._file = zipfile.ZipFile(self.path)
+            return self._file
 
     def _set_names_to_info(self):
         assert self._names_to_info is None

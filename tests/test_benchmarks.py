@@ -1,5 +1,3 @@
-import pytest
-
 from pencroft.benchmark import main
 
 
@@ -45,7 +43,6 @@ def test_tarfile_4thread(mytest_tarfile):
     main(args)
 
 
-@pytest.mark.xfail
 def test_tarfile_4proc(mytest_tarfile):
     args = Args()
     args.path = mytest_tarfile
@@ -69,7 +66,6 @@ def test_zipfile_4thread(mytest_zipfile):
     main(args)
 
 
-@pytest.mark.xfail
 def test_zipfile_4proc(mytest_zipfile):
     args = Args()
     args.path = mytest_zipfile
