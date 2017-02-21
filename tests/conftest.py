@@ -1,3 +1,4 @@
+import itertools
 import os
 import shutil
 import tarfile
@@ -9,7 +10,8 @@ import pytest
 
 @pytest.fixture(scope='session')
 def mytest_keys():
-    return ['foo', 'bar/baz']
+    x = {'a', 'b', 'c', 'foo', 'bar', 'baz'}
+    return {os.path.sep.join(p) for p in itertools.permutations(x)}
 
 
 @pytest.fixture(scope='session')
