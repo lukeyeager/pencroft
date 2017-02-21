@@ -9,9 +9,12 @@ from .loaders.tarfile import TarfileLoader
 from .loaders.zipfile import ZipfileLoader
 
 
-def open(path):
+def Loader(path):
+    """Returns a Loader of the appropriate type"""
     path = os.path.realpath(path)
-    if os.path.isfile(path):
+    if not os.path.exists(path):
+        open(path, 'r')  # raise standard exception
+    elif os.path.isfile(path):
         if tarfile.is_tarfile(path):
             return TarfileLoader(path)
         elif zipfile.is_zipfile(path):

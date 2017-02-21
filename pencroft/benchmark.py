@@ -1,13 +1,10 @@
-from __future__ import (
-    absolute_import,
-    print_function,
-)
+from __future__ import absolute_import
 
 import functools
 import random
 import time
 
-from . import open as open_path
+from . import Loader
 
 
 def set_parser(parser):
@@ -50,7 +47,7 @@ def main(args):
 
     with _Timer('Total'):
         with _Timer('Initialization'):
-            loader = open_path(path)
+            loader = Loader(path)
 
         with _Timer('Read keys'):
             keys = loader.keys()
