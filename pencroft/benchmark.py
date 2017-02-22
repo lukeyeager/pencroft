@@ -46,7 +46,7 @@ def benchmark(path, threads=1, thread_library='threading'):
 
     with _Timer('Total'):
         with _Timer('Initialization'):
-            loader = Loader(path)
+            loader = Loader.new(path)
 
         with _Timer('Read keys'):
             keys = loader.keys()

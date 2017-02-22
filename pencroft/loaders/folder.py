@@ -1,34 +1,39 @@
+from __future__ import absolute_import
+
 import os
 
+from .loader import Loader
 
-class FolderLoader(object):
-    def __init__(self, path):
-        self.root = os.path.realpath(path)
 
-    def _in_root(self, path):
-        if os.path.isabs(path):
-            if not os.path.commonprefix(
-                    [path, self.root]).startswith(self.root):
-                raise ValueError('"%s" is not in "%s"' % (path, self.root))
-        else:
-            path = os.path.join(self.root, path)
-        return path
+class FolderLoader(Loader):
+
+    def __init__(self, *args, **kwargs):
+        super(FolderLoader, self).__init__(*args, **kwargs)
+        self._filenames = None
+
+    def _set_filenames(self):
+        assert self._filenames is None
+        self._filenames = []
+        for dirpath, dirnames, filenames in os.walk(self.path):
+            for filename in filenames:
+                self._filenames.append(os.path.relpath(
+                    os.path.join(dirpath, filename),
+                    self.path,
+                ))
 
     def keys(self):
-        result = []
-        for dirpath, dirnames, filenames in os.walk(self.root):
-            for filename in filenames:
-                result.append(os.path.relpath(
-                    os.path.join(dirpath, filename),
-                    self.root,
-                ))
-        return result
+        if self._filenames is None:
+            self._set_filenames()
+        return self._filenames
 
     def exists(self, key):
-        path = self._in_root(key)
-        return os.path.exists(path)
+        return key in self._filenames
 
     def get(self, key):
-        path = self._in_root(key)
+        if os.path.isabs(key):
+            raise ValueError('Path must be relative to root, not absolute')
+        path = os.path.join(self.path, key)
+        if not os.path.commonprefix([path, self.path]).startswith(self.path):
+            raise ValueError('"%s" is not in "%s"' % (path, self.path))
         with open(path, 'rb') as infile:
             return infile.read()

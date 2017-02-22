@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 
-import os
 import zipfile
 
+from .loader import Loader
 
-class ZipfileLoader(object):
+
+class ZipfileLoader(Loader):
     """Loads from a zipfile"""
 
-    def __init__(self, path):
-        self.path = os.path.realpath(path)
+    def __init__(self, *args, **kwargs):
+        super(ZipfileLoader, self).__init__(*args, **kwargs)
         self._names_to_info = None
 
     def __getstate__(self):

@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 
-import os
 import tarfile
 
+from .loader import Loader
 
-class TarfileLoader(object):
+
+class TarfileLoader(Loader):
     """Loads from a tarfile"""
 
-    def __init__(self, path):
-        self.path = os.path.realpath(path)
+    def __init__(self, *args, **kwargs):
+        super(TarfileLoader, self).__init__(*args, **kwargs)
         self._names_to_members = None
 
     def __getstate__(self):

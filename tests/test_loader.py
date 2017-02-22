@@ -1,4 +1,6 @@
-from pencroft.benchmark import benchmark
+import sys
+
+PY3 = sys.version_info[0] == 3
 
 
 class TestLoader:
@@ -7,12 +9,21 @@ class TestLoader:
     def test_keys(self, mytest_loader, mytest_keys):
         assert sorted(mytest_keys) == sorted(mytest_loader.keys())
 
-    def test_benchmark(self, mytest_path):
-        benchmark(mytest_path)
+    def test_exists(self, mytest_loader):
+        key = mytest_loader.keys()[-1]
+        assert mytest_loader.exists(key)
 
-    def test_benchmark_4thread(self, mytest_path):
-        benchmark(mytest_path, threads=4)
+    def test_get(self, mytest_loader):
+        key = mytest_loader.keys()[-1]
+        data = mytest_loader.get(key)
+        if PY3:
+            assert isinstance(data, bytes)
+        else:
+            assert isinstance(data, str)
 
-    def test_benchmark_4proc(self, mytest_path):
-        benchmark(mytest_path, threads=4,
-                  thread_library='multiprocessing')
+    def test_iter(self, mytest_loader):
+        data = next(mytest_loader)
+        if PY3:
+            assert isinstance(data, bytes)
+        else:
+            assert isinstance(data, str)
