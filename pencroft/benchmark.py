@@ -59,7 +59,7 @@ def benchmark(path, threads=1, thread_library='threading'):
             else:
                 for key in keys:
                     loader.get(key)
-    print()
+    print('')
 
 
 def main(args):
