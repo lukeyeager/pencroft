@@ -1,8 +1,18 @@
 from __future__ import absolute_import
 
+import multiprocessing
 import os
 import tarfile
 import zipfile
+
+
+# Need a global variable instead of a class variable to avoid errors like:
+#   > RuntimeError: Synchronized objects should only be shared between
+#     processes through inheritance
+# Need an array instead of a single object in order to support multiple
+# synchronized Loaders in the same program.
+synch_iter_counters_lock = multiprocessing.Lock()  # protects list
+synch_iter_counters = []  # list of (Value, Lock) tuples
 
 
 class Loader(object):
@@ -34,7 +44,15 @@ class Loader(object):
             raise ValueError("Don't instantiate Loader directly. "
                              "Use Loader.new() instead.")
         self.path = os.path.realpath(path)
-        self._iter_n = 0
+
+        with synch_iter_counters_lock:
+            self._synch_iter_index = len(synch_iter_counters)
+            synch_iter_counters.append(
+                (
+                    multiprocessing.Lock(),
+                    multiprocessing.Value('l'),  # signed long
+                )
+            )
 
     def __iter__(self):
         return self
@@ -45,12 +63,15 @@ class Loader(object):
 
     def next(self):
         keys = self.keys()
-        if self._iter_n < len(keys):
-            data = self.get(keys[self._iter_n])
-            self._iter_n += 1
-            return data
+        index = -1
+        lock, value = synch_iter_counters[self._synch_iter_index]
+        with lock:
+            if value.value < len(keys):
+                index = value.value
+                value.value += 1
+        if index != -1:
+            return self.get(keys[index])
         else:
-            self._iter_n = 0
             raise StopIteration()
 
     def keys(self):
