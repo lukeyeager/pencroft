@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from collections import OrderedDict
+import random
 import zipfile
 
 from .loader import Loader
@@ -45,3 +47,10 @@ class ZipfileLoader(Loader):
     def get(self, key):
         info = self._names_to_info[key]
         return self.file.read(info)
+
+    def reset(self, shuffle_keys=False):
+        super(ZipfileLoader, self)._reset_iter()
+        if shuffle_keys:
+            items = self._names_to_info
+            random.shuffle(items)
+            self._names_to_info = OrderedDict(items)

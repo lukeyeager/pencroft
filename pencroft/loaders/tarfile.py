@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from collections import OrderedDict
+import random
 import tarfile
 
 from .loader import Loader
@@ -29,7 +31,7 @@ class TarfileLoader(Loader):
 
     def _set_names_to_members(self):
         assert self._names_to_members is None
-        self._names_to_members = dict(
+        self._names_to_members = OrderedDict(
             [(m.name, m) for m in self.file.getmembers() if m.isfile()])
 
     def keys(self):
@@ -50,3 +52,10 @@ class TarfileLoader(Loader):
             # Try re-opening the file
             self.file = tarfile.open(self.path)
             return self.file.extractfile(member).read()
+
+    def reset(self, shuffle_keys=False):
+        super(TarfileLoader, self)._reset_iter()
+        if shuffle_keys:
+            items = self._names_to_members
+            random.shuffle(items)
+            self._names_to_members = OrderedDict(items)

@@ -85,3 +85,11 @@ class Loader(object):
 
     def get(self, key):
         raise NotImplementedError
+
+    def reset(self, randomize_keys=False):
+        raise NotImplementedError
+
+    def _reset_iter(self):
+        lock, value = synch_iter_counters[self._synch_iter_index]
+        with lock:
+            value.value = 0

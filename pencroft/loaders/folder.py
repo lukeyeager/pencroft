@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import random
 
 from .loader import Loader
 
@@ -37,3 +38,8 @@ class FolderLoader(Loader):
             raise ValueError('"%s" is not in "%s"' % (path, self.path))
         with open(path, 'rb') as infile:
             return infile.read()
+
+    def reset(self, shuffle_keys=False):
+        super(FolderLoader, self)._reset_iter()
+        if shuffle_keys:
+            random.shuffle(self._filenames)
