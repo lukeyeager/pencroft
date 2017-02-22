@@ -5,13 +5,14 @@ import tarfile
 import tempfile
 import zipfile
 
+import pencroft
 import pytest
 
 
 @pytest.fixture(scope='session')
 def mytest_keys():
     x = {'a', 'b', 'c', 'foo', 'bar', 'baz'}
-    return {os.path.sep.join(p) for p in itertools.permutations(x)}
+    return sorted({os.path.sep.join(p) for p in itertools.permutations(x)})
 
 
 @pytest.fixture(scope='session')
@@ -53,3 +54,27 @@ def mytest_zipfile(mytest_folder):
     zf.close()
     yield filename
     os.remove(filename)
+
+
+@pytest.fixture(params=['folder', 'tarfile', 'zipfile'])
+def mytest_path(request, mytest_folder, mytest_tarfile, mytest_zipfile):
+    t = request.param
+    if t == 'folder':
+        return mytest_folder
+    if t == 'tarfile':
+        return mytest_tarfile
+    if t == 'zipfile':
+        return mytest_zipfile
+    assert False, 'Should not reach here'
+
+
+@pytest.fixture(params=['folder', 'tarfile', 'zipfile'])
+def mytest_loader(request, mytest_folder, mytest_tarfile, mytest_zipfile):
+    t = request.param
+    if t == 'folder':
+        return pencroft.FolderLoader(mytest_folder)
+    if t == 'tarfile':
+        return pencroft.TarfileLoader(mytest_tarfile)
+    if t == 'zipfile':
+        return pencroft.ZipfileLoader(mytest_zipfile)
+    assert False, 'Should not reach here'

@@ -31,19 +31,18 @@ def get_data(loader, key):
     return len(data)
 
 
-def main(args):
-    path = args.path
+def benchmark(path, threads=1, thread_library='threading'):
     print('%20s: %s' % ('File', path))
-    print('%20s: %d' % ('Threads', args.threads))
-    if args.threads > 1:
-        print('%20s: %s' % ('Library', args.thread_library))
+    print('%20s: %d' % ('Threads', threads))
+    if threads > 1:
+        print('%20s: %s' % ('Library', thread_library))
 
-    if args.threads > 1:
+    if threads > 1:
         import multiprocessing.pool
-        if args.thread_library == 'threading':
-            pool = multiprocessing.pool.ThreadPool(args.threads)
-        elif args.thread_library == 'multiprocessing':
-            pool = multiprocessing.pool.Pool(args.threads)
+        if thread_library == 'threading':
+            pool = multiprocessing.pool.ThreadPool(threads)
+        elif thread_library == 'multiprocessing':
+            pool = multiprocessing.pool.Pool(threads)
 
     with _Timer('Total'):
         with _Timer('Initialization'):
@@ -55,9 +54,15 @@ def main(args):
         random.shuffle(keys)
 
         with _Timer('Read data'):
-            if args.threads > 1:
+            if threads > 1:
                 pool.map(functools.partial(get_data, loader), keys)
             else:
                 for key in keys:
                     loader.get(key)
     print()
+
+
+def main(args):
+    benchmark(args.path,
+              threads=args.threads,
+              thread_library=args.thread_library)
