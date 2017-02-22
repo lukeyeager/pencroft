@@ -62,6 +62,7 @@ class Loader(object):
         return self.next()
 
     def next(self):
+        """Returns the next (key, data) tuple."""
         keys = self.keys()
         index = -1
         lock, value = synch_iter_counters[self._synch_iter_index]
@@ -70,7 +71,9 @@ class Loader(object):
                 index = value.value
                 value.value += 1
         if index != -1:
-            return self.get(keys[index])
+            key = keys[index]
+            data = self.get(key)
+            return key, data
         else:
             raise StopIteration()
 
