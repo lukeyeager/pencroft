@@ -4,7 +4,7 @@ import multiprocessing.pool
 import random
 import time
 
-from . import Loader
+import pencroft
 
 
 def set_parser(parser):
@@ -40,7 +40,7 @@ def benchmark(path, threads=1, thread_library='threading'):
 
     with _Timer('Total'):
         with _Timer('Initialization'):
-            loader = Loader.new(path)
+            loader = pencroft.open(path)
             if threads > 1:
                 if thread_library == 'threading':
                     loader.make_thread_safe()

@@ -4,9 +4,7 @@ import ctypes
 import multiprocessing
 import os
 import random
-import tarfile
 import threading
-import zipfile
 
 
 class NoopLock(object):
@@ -19,27 +17,6 @@ class NoopLock(object):
 
 class Loader(object):
     """Generic loader class"""
-
-    @classmethod
-    def new(cls, path):
-        """Utility function for auto-detecting the type of PATH
-        and returning an instance of the appropriate class.
-        """
-        from .folder import FolderLoader
-        from .tarfile import TarfileLoader
-        from .zipfile import ZipfileLoader
-
-        path = os.path.realpath(path)
-        if not os.path.exists(path):
-            open(path, 'r')  # raise standard exception
-        elif os.path.isfile(path):
-            if tarfile.is_tarfile(path):
-                return TarfileLoader(path)
-            elif zipfile.is_zipfile(path):
-                return ZipfileLoader(path)
-        elif os.path.isdir(path):
-            return FolderLoader(path)
-        raise ValueError("Couldn't infer type of \"%s\"" % path)
 
     def __init__(self, path):
         if type(self) == Loader:
