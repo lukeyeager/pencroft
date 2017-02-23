@@ -40,6 +40,7 @@ class FolderLoader(Loader):
             return infile.read()
 
     def reset(self, shuffle_keys=False):
+        self.keys()  # set if unset
         with self._lock:
             super(FolderLoader, self)._reset_iter()
             if shuffle_keys:

@@ -52,6 +52,17 @@ class TestLoader:
 
         assert keys1 == keys2
 
+    def test_iter_reset_shuffle_keys(self, mytest_loader):
+        """Iterating after reset(shuffle_keys=True) should return keys in the
+        newly shuffled order."""
+        mytest_loader.reset(shuffle_keys=True)
+
+        keys = []
+        for key, _ in mytest_loader:
+            keys.append(key)
+
+        assert keys == mytest_loader.keys()
+
     def test_multithreaded_iter(self, mytest_loader, mytest_keys):
         """When multiple threads are calling next(loader) in parallel,
         each key should only be used once."""

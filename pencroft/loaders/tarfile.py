@@ -56,9 +56,10 @@ class TarfileLoader(Loader):
                 return self.file.extractfile(member).read()
 
     def reset(self, shuffle_keys=False):
+        self.keys()  # set if unset
         with self._lock:
             super(TarfileLoader, self)._reset_iter()
             if shuffle_keys:
-                items = self._names_to_members
+                items = list(self._names_to_members.items())
                 random.shuffle(items)
                 self._names_to_members = OrderedDict(items)

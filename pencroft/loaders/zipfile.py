@@ -51,9 +51,10 @@ class ZipfileLoader(Loader):
             return self.file.read(info)
 
     def reset(self, shuffle_keys=False):
+        self.keys()  # set if unset
         with self._lock:
             super(ZipfileLoader, self)._reset_iter()
             if shuffle_keys:
-                items = self._names_to_info
+                items = list(self._names_to_info.items())
                 random.shuffle(items)
                 self._names_to_info = OrderedDict(items)
