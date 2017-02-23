@@ -1,4 +1,4 @@
-import multiprocessing.pool
+import multiprocessing
 import sys
 
 PY3 = sys.version_info[0] == 3
@@ -55,6 +55,7 @@ class TestLoader:
     def test_multithreaded_iter(self, mytest_loader, mytest_keys):
         """When multiple threads are calling next(loader) in parallel,
         each key should only be used once."""
+        mytest_loader.make_mp_safe()
         q = multiprocessing.Queue()
         t1 = multiprocessing.Process(target=_add_next_key,
                                      args=(mytest_loader, q))

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-import functools
+import multiprocessing.pool
 import random
 import time
 
@@ -26,27 +26,24 @@ class _Timer(object):
         print('%20s: %f' % (self.message, time.time() - self.start))
 
 
-def get_data(loader, key):
-    data = loader.get(key)
-    return len(data)
-
-
 def benchmark(path, threads=1, thread_library='threading'):
     print('%20s: %s' % ('File', path))
     print('%20s: %d' % ('Threads', threads))
     if threads > 1:
         print('%20s: %s' % ('Library', thread_library))
 
+    kwargs = {}  # used for the loader constructor
     if threads > 1:
-        import multiprocessing.pool
         if thread_library == 'threading':
             pool = multiprocessing.pool.ThreadPool(threads)
+            kwargs['thread_safe'] = True
         elif thread_library == 'multiprocessing':
             pool = multiprocessing.pool.Pool(threads)
+            kwargs['mp_safe'] = True
 
     with _Timer('Total'):
         with _Timer('Initialization'):
-            loader = Loader.new(path)
+            loader = Loader.new(path, **kwargs)
 
         with _Timer('Read keys'):
             keys = loader.keys()
@@ -55,7 +52,7 @@ def benchmark(path, threads=1, thread_library='threading'):
 
         with _Timer('Read data'):
             if threads > 1:
-                pool.map(functools.partial(get_data, loader), keys)
+                pool.map(loader.get, keys)
             else:
                 for key in keys:
                     loader.get(key)

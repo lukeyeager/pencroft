@@ -22,8 +22,9 @@ def mytest_folder(mytest_keys):
         dirname, filename = os.path.split(key)
         if dirname:
             os.makedirs(os.path.join(d, dirname))
-        with open(os.path.join(d, key), 'w') as outfile:
-            outfile.write('test')
+        with open(os.path.join(d, key), 'wb') as outfile:
+            # More than 1 page
+            outfile.write(os.urandom(5000))
     yield d
     shutil.rmtree(d)
 

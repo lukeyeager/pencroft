@@ -1,25 +1,29 @@
 from __future__ import absolute_import
 
+import ctypes
 import multiprocessing
 import os
 import tarfile
+import threading
 import zipfile
 
 
-# Need a global variable instead of a class variable to avoid errors like:
-#   > RuntimeError: Synchronized objects should only be shared between
-#     processes through inheritance
-# Need an array instead of a single object in order to support multiple
-# synchronized Loaders in the same program.
-synch_iter_counters_lock = multiprocessing.Lock()  # protects list
-synch_iter_counters = []  # list of (Value, Lock) tuples
+class NoopLock(object):
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
+    def acquire(self, *args, **kwargs):
+        return False
 
 
 class Loader(object):
     """Generic loader class"""
 
     @classmethod
-    def new(cls, path):
+    def new(cls, path, *args, **kwargs):
         """Utility function for auto-detecting the type of PATH
         and returning an instance of the appropriate class.
         """
@@ -32,50 +36,60 @@ class Loader(object):
             open(path, 'r')  # raise standard exception
         elif os.path.isfile(path):
             if tarfile.is_tarfile(path):
-                return TarfileLoader(path)
+                return TarfileLoader(path, *args, **kwargs)
             elif zipfile.is_zipfile(path):
-                return ZipfileLoader(path)
+                return ZipfileLoader(path, *args, **kwargs)
         elif os.path.isdir(path):
-            return FolderLoader(path)
+            return FolderLoader(path, *args, **kwargs)
         raise ValueError("Couldn't infer type of \"%s\"" % path)
 
-    def __init__(self, path):
+    def __init__(self, path, thread_safe=False, mp_safe=False):
         if type(self) == Loader:
             raise ValueError("Don't instantiate Loader directly. "
                              "Use Loader.new() instead.")
         self.path = os.path.realpath(path)
+        self._lock = NoopLock()
+        self._iter_count = ctypes.c_long(0)
+        if mp_safe:
+            self.make_mp_safe()
+        elif thread_safe:
+            self.make_thread_safe()
 
-        with synch_iter_counters_lock:
-            self._synch_iter_index = len(synch_iter_counters)
-            synch_iter_counters.append(
-                (
-                    multiprocessing.Lock(),
-                    multiprocessing.Value('l'),  # signed long
-                )
-            )
+    def make_mp_safe(self):
+        old_lock = self._lock
+        with old_lock:
+            manager = multiprocessing.Manager()
+            self._lock = manager.Lock()
+            self._iter_count = manager.Value('l', self._iter_count.value)
+
+    def make_thread_safe(self):
+        old_lock = self._lock
+        with old_lock:
+            self._lock = threading.Lock()
+            self._iter_count = ctypes.c_long(self._iter_count.value)
 
     def __iter__(self):
         return self
 
-    # Python 3 compatibility
     def __next__(self):
-        return self.next()
-
-    def next(self):
         """Returns the next (key, data) tuple."""
-        keys = self.keys()
-        index = -1
-        lock, value = synch_iter_counters[self._synch_iter_index]
-        with lock:
-            if value.value < len(keys):
-                index = value.value
-                value.value += 1
-        if index != -1:
-            key = keys[index]
-            data = self.get(key)
-            return key, data
-        else:
-            raise StopIteration()
+        key = None
+        with self._lock:
+            keys = self.keys()
+            if self._iter_count.value < len(keys):
+                key = keys[self._iter_count.value]
+                self._iter_count.value += 1
+            else:
+                raise StopIteration()
+        data = self.get(key)
+        return (key, data)
+
+    # Python 2 compatibility
+    def next(self):
+        return self.__next__()
+
+    def set_lock(self, lock):
+        self._lock = lock
 
     def keys(self):
         raise NotImplementedError
@@ -86,10 +100,10 @@ class Loader(object):
     def get(self, key):
         raise NotImplementedError
 
-    def reset(self, randomize_keys=False):
+    def reset(self, shuffle_keys=False):
         raise NotImplementedError
 
     def _reset_iter(self):
-        lock, value = synch_iter_counters[self._synch_iter_index]
-        with lock:
-            value.value = 0
+        assert not self._lock.acquire(block=False), \
+            'Must acquire lock before calling _reset_iter()'
+        self._iter_count.value = 0
