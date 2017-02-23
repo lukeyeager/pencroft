@@ -32,22 +32,22 @@ def benchmark(path, threads=1, thread_library='threading'):
     if threads > 1:
         print('%20s: %s' % ('Library', thread_library))
 
-    kwargs = {}  # used for the loader constructor
     if threads > 1:
         if thread_library == 'threading':
             pool = multiprocessing.pool.ThreadPool(threads)
-            kwargs['thread_safe'] = True
         elif thread_library == 'multiprocessing':
             pool = multiprocessing.pool.Pool(threads)
-            kwargs['mp_safe'] = True
 
     with _Timer('Total'):
         with _Timer('Initialization'):
-            loader = Loader.new(path, **kwargs)
+            loader = Loader.new(path)
+            if threads > 1:
+                if thread_library == 'threading':
+                    loader.make_thread_safe()
+                elif thread_library == 'multiprocessing':
+                    loader.make_mp_safe()
 
-        with _Timer('Read keys'):
-            keys = loader.keys()
-
+        keys = loader.keys()
         random.shuffle(keys)
 
         with _Timer('Read data'):

@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 from collections import OrderedDict
-import random
 import tarfile
 
 from .loader import Loader
@@ -9,10 +8,6 @@ from .loader import Loader
 
 class TarfileLoader(Loader):
     """Loads from a tarfile"""
-
-    def __init__(self, *args, **kwargs):
-        super(TarfileLoader, self).__init__(*args, **kwargs)
-        self._names_to_members = None
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -30,20 +25,10 @@ class TarfileLoader(Loader):
             self._open_file()
             return self._file
 
-    def _set_names_to_members(self):
-        assert self._names_to_members is None
+    def _set_keys(self):
         self._names_to_members = OrderedDict(
             [(m.name, m) for m in self.file.getmembers() if m.isfile()])
-
-    def keys(self):
-        if self._names_to_members is None:
-            self._set_names_to_members()
-        return list(self._names_to_members.keys())
-
-    def exists(self, key):
-        if self._names_to_members is None:
-            self._set_names_to_members()
-        return key in self._names_to_members
+        self._keys = list(self._names_to_members.keys())
 
     def get(self, key):
         member = self._names_to_members[key]
@@ -54,12 +39,3 @@ class TarfileLoader(Loader):
                 # Try re-opening the file
                 self._open_file()
                 return self.file.extractfile(member).read()
-
-    def reset(self, shuffle_keys=False):
-        self.keys()  # set if unset
-        with self._lock:
-            super(TarfileLoader, self)._reset_iter()
-            if shuffle_keys:
-                items = list(self._names_to_members.items())
-                random.shuffle(items)
-                self._names_to_members = OrderedDict(items)

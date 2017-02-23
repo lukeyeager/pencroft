@@ -4,11 +4,16 @@ import sys
 PY3 = sys.version_info[0] == 3
 
 
-# Used in a multiprocessing test
-# Must be defined at the module level
+# These functions are used in multiprocessing tests.
+# They must be defined at the module level.
+
 def _add_next_key(loader, queue):
     for key, data in loader:
         queue.put(key)
+
+
+def _shuffle_keys(loader):
+    loader.reset(shuffle_keys=True)
 
 
 class TestLoader:
@@ -55,13 +60,17 @@ class TestLoader:
     def test_iter_reset_shuffle_keys(self, mytest_loader):
         """Iterating after reset(shuffle_keys=True) should return keys in the
         newly shuffled order."""
+        # Shuffle
+        old_keys = mytest_loader.keys()
         mytest_loader.reset(shuffle_keys=True)
+        new_keys = mytest_loader.keys()
+        assert old_keys != new_keys
 
-        keys = []
+        # Iterate
+        iter_keys = []
         for key, _ in mytest_loader:
-            keys.append(key)
-
-        assert keys == mytest_loader.keys()
+            iter_keys.append(key)
+        assert iter_keys == new_keys
 
     def test_multithreaded_iter(self, mytest_loader, mytest_keys):
         """When multiple threads are calling next(loader) in parallel,
@@ -82,3 +91,17 @@ class TestLoader:
         while not q.empty():
             keys.append(q.get())
         assert sorted(keys) == sorted(mytest_loader.keys())
+
+    def test_multithreaded_shuffle(self, mytest_loader):
+        """Calling shuffle() in a child process should shuffle the keys in the
+        main process."""
+        mytest_loader.make_mp_safe()
+        old_keys = mytest_loader.keys()
+
+        thread = multiprocessing.Process(target=_shuffle_keys,
+                                         args=(mytest_loader,))
+        thread.start()
+        thread.join()
+
+        new_keys = mytest_loader.keys()
+        assert old_keys != new_keys

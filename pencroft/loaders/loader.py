@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import ctypes
 import multiprocessing
 import os
+import random
 import tarfile
 import threading
 import zipfile
@@ -20,7 +21,7 @@ class Loader(object):
     """Generic loader class"""
 
     @classmethod
-    def new(cls, path, *args, **kwargs):
+    def new(cls, path):
         """Utility function for auto-detecting the type of PATH
         and returning an instance of the appropriate class.
         """
@@ -33,24 +34,21 @@ class Loader(object):
             open(path, 'r')  # raise standard exception
         elif os.path.isfile(path):
             if tarfile.is_tarfile(path):
-                return TarfileLoader(path, *args, **kwargs)
+                return TarfileLoader(path)
             elif zipfile.is_zipfile(path):
-                return ZipfileLoader(path, *args, **kwargs)
+                return ZipfileLoader(path)
         elif os.path.isdir(path):
-            return FolderLoader(path, *args, **kwargs)
+            return FolderLoader(path)
         raise ValueError("Couldn't infer type of \"%s\"" % path)
 
-    def __init__(self, path, thread_safe=False, mp_safe=False):
+    def __init__(self, path):
         if type(self) == Loader:
             raise ValueError("Don't instantiate Loader directly. "
                              "Use Loader.new() instead.")
         self.path = os.path.realpath(path)
         self._lock = NoopLock()
         self._iter_count = ctypes.c_long(0)
-        if mp_safe:
-            self.make_mp_safe()
-        elif thread_safe:
-            self.make_thread_safe()
+        self._set_keys()
 
     def make_mp_safe(self):
         old_lock = self._lock
@@ -58,12 +56,14 @@ class Loader(object):
             manager = multiprocessing.Manager()
             self._lock = manager.Lock()
             self._iter_count = manager.Value('l', self._iter_count.value)
+            self._keys = manager.list(self._keys)
 
     def make_thread_safe(self):
         old_lock = self._lock
         with old_lock:
             self._lock = threading.Lock()
             self._iter_count = ctypes.c_long(self._iter_count.value)
+            self._keys = list(self._keys)
 
     def __iter__(self):
         return self
@@ -72,9 +72,8 @@ class Loader(object):
         """Returns the next (key, data) tuple."""
         key = None
         with self._lock:
-            keys = self.keys()
-            if self._iter_count.value < len(keys):
-                key = keys[self._iter_count.value]
+            if self._iter_count.value < len(self._keys):
+                key = self._keys[self._iter_count.value]
                 self._iter_count.value += 1
             else:
                 raise StopIteration()
@@ -85,21 +84,20 @@ class Loader(object):
     def next(self):
         return self.__next__()
 
-    def set_lock(self, lock):
-        self._lock = lock
+    def _set_keys(self):
+        raise NotImplementedError
 
     def keys(self):
-        raise NotImplementedError
+        return list(self._keys)
 
     def exists(self, key):
-        raise NotImplementedError
+        return key in self._keys
 
     def get(self, key):
         raise NotImplementedError
 
     def reset(self, shuffle_keys=False):
-        raise NotImplementedError
-
-    def _reset_iter(self):
-        """Reset the iterator count."""
-        self._iter_count.value = 0
+        with self._lock:
+            self._iter_count.value = 0
+            if shuffle_keys:
+                random.shuffle(self._keys)
