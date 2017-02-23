@@ -15,9 +15,6 @@ class NoopLock(object):
     def __exit__(self, *args, **kwargs):
         pass
 
-    def acquire(self, *args, **kwargs):
-        return False
-
 
 class Loader(object):
     """Generic loader class"""
@@ -104,6 +101,5 @@ class Loader(object):
         raise NotImplementedError
 
     def _reset_iter(self):
-        assert not self._lock.acquire(block=False), \
-            'Must acquire lock before calling _reset_iter()'
+        """Reset the iterator count."""
         self._iter_count.value = 0
