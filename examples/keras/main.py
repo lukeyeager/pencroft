@@ -7,7 +7,7 @@ import keras
 import keras.applications
 import keras.preprocessing.image
 
-from loader import Loader
+from loader import PencroftLoader
 
 
 def train(source, use_keras_loader=False, nb_worker=1, pickle_safe=False,
@@ -24,7 +24,7 @@ def train(source, use_keras_loader=False, nb_worker=1, pickle_safe=False,
         count = generator.nb_sample
         num_classes = generator.nb_class
     else:
-        loader = Loader(source)
+        loader = PencroftLoader(source)
         if nb_worker > 1:
             if pickle_safe:
                 loader.loader.make_mp_safe()
@@ -64,7 +64,7 @@ def train(source, use_keras_loader=False, nb_worker=1, pickle_safe=False,
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Train ResNet50 on one epoch of DATA')
+    parser = argparse.ArgumentParser('Train on one epoch of DATA')
     parser.add_argument('source')
     parser.add_argument('--keras_loader', action='store_true')
     parser.add_argument('--nb_worker', type=int, default=1)

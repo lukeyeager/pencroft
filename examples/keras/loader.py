@@ -3,11 +3,12 @@ import os
 import random
 
 import numpy as np
-import pencroft
 import PIL.Image
 
+import pencroft
 
-class Loader(object):
+
+class PencroftLoader(object):
     """Opens SOURCE with pencroft. SOURCE is interpreted as folders named for
     classes containing images for the class.
 
