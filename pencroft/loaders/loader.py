@@ -42,6 +42,14 @@ class Loader(object):
             self._iter_count = ctypes.c_long(self._iter_count.value)
             self._keys = list(self._keys)
 
+    def __len__(self):
+        return len(self._keys)
+
+    def __getitem__(self, index):
+        key = self._keys[index]
+        data = self.get(key)
+        return (key, data)
+
     def __iter__(self):
         return self
 

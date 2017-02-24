@@ -42,6 +42,16 @@ class TestLoader:
         else:
             assert isinstance(data, str)
 
+    def test_len(self, mytest_loader):
+        assert len(mytest_loader) == len(mytest_loader.keys())
+
+    def test_iter_and_getitem(self, mytest_loader):
+        """next(loader) and loader[0] should return the same data"""
+        key1, data1 = next(mytest_loader)
+        key2, data2 = mytest_loader[0]
+        assert key1 == key2
+        assert data1 == data2
+
     def test_iter_reset(self, mytest_loader):
         """Iterating before and after calling reset() should return the same
         keys in the same order."""
