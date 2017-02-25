@@ -33,4 +33,9 @@ class ZipfileLoader(Loader):
     def get(self, key):
         info = self._names_to_info[key]
         with self._lock:
-            return self.file.read(info)
+            try:
+                return self.file.read(info)
+            except zipfile.BadZipFile:
+                # Try re-opening the file
+                self._open_file()
+                return self.file.read(info)
