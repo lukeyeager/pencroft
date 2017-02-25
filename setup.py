@@ -13,7 +13,7 @@ with open(os.path.join(LOCAL_DIR, 'requirements-test.txt'), 'r') as infile:
 
 setuptools.setup(
     name='pencroft',
-    version='0.4',
+    version='0.5',
     license='BSD',
     packages=setuptools.find_packages(),
     extras_require={'test': test_requirements},
